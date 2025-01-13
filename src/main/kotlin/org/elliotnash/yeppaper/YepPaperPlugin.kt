@@ -9,8 +9,8 @@ import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerAdvancementDoneEvent
 import org.bukkit.plugin.java.JavaPlugin
 
-const val YEP_ADV_FORMAT = "%s␞%s␟%s␟%s␟%s␟%s"
-const val YEP_DEATH_FORMAT = "%s␞%s␟%s␟%s"
+const val YEP_ADV_FORMAT = "%s\u241E%s\u241F%s\u241F%s\u241F%s\u241F%s"
+const val YEP_DEATH_FORMAT = "%s\u241E%s\u241F%s\u241F%s"
 
 const val YEP_GENERIC = "yep:generic"
 const val YEP_ADVANCEMENT = "yep:advancement"
@@ -23,6 +23,9 @@ const val YEP_ADV_CHALLENGE = "CHALLENGE"
 
 class YepPaperPlugin : JavaPlugin(), Listener {
     private val textSerializer = PlainTextComponentSerializer.plainText()
+
+    private val colorCodeRegex = "&[0-9a-fk-or]".toRegex(RegexOption.IGNORE_CASE)
+
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, YEP_GENERIC)
@@ -37,8 +40,8 @@ class YepPaperPlugin : JavaPlugin(), Listener {
             YEP_DEATH_FORMAT,
             YEP_DEATH,
             event.player.name,
-            textSerializer.serialize(event.player.displayName()),
-            event.deathMessage()?.let { textSerializer.serialize(it) }
+            removeColorCodes(textSerializer.serialize(event.player.displayName())),
+            event.deathMessage()?.let { removeColorCodes(textSerializer.serialize(it)) }
         )
 
         event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
@@ -59,12 +62,16 @@ class YepPaperPlugin : JavaPlugin(), Listener {
             YEP_ADV_FORMAT,
             YEP_ADVANCEMENT,
             event.player.name,
-            textSerializer.serialize(event.player.displayName()),
+            removeColorCodes(textSerializer.serialize(event.player.displayName())),
             advType,
-            advInfo.title,
-            advInfo.description
+            removeColorCodes(advInfo.title),
+            removeColorCodes(advInfo.description)
         )
 
         event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
+    }
+
+    private fun removeColorCodes(input: String): String {
+        return colorCodeRegex.replace(input, "")
     }
 }
