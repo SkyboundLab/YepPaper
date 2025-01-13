@@ -1,6 +1,6 @@
 name: YepPaper
 version: "{{ version }}"
 main: org.elliotnash.yeppaper.YepPaperPlugin
-api-version: 1.21.4
+api-version: 1.20.6
 author: Elliot
 description: A plugin for sending server events to a Velocity Proxy.
