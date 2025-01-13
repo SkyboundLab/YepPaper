@@ -24,7 +24,7 @@ const val YEP_ADV_CHALLENGE = "CHALLENGE"
 class YepPaperPlugin : JavaPlugin(), Listener {
     private val textSerializer = PlainTextComponentSerializer.plainText()
 
-    private val colorCodeRegex = "&[0-9a-fk-or]".toRegex(RegexOption.IGNORE_CASE)
+    private val colorCodeRegex = "&[0-9a-fk-orx]".toRegex(RegexOption.IGNORE_CASE)
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
