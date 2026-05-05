@@ -1,6 +1,6 @@
 package org.elliotnash.yeppaper
 
-import me.croabeast.lib.advancement.AdvancementInfo
+import io.papermc.paper.advancement.AdvancementDisplay
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -9,66 +9,76 @@ import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerAdvancementDoneEvent
 import org.bukkit.plugin.java.JavaPlugin
 
-const val YEP_ADV_FORMAT = "%s\u241E%s\u241F%s\u241F%s\u241F%s\u241F%s"
-const val YEP_DEATH_FORMAT = "%s\u241E%s\u241F%s\u241F%s"
+private const val RECORD_SEPARATOR = '\u241E'
+
+private const val UNIT_SEPARATOR = '\u241F'
 
 const val YEP_GENERIC = "yep:generic"
+
 const val YEP_ADVANCEMENT = "yep:advancement"
+
 const val YEP_DEATH = "yep:death"
 
 const val YEP_ADV_DEFAULT = "DEFAULT"
+
 const val YEP_ADV_GOAL = "GOAL"
+
 const val YEP_ADV_TASK = "TASK"
+
 const val YEP_ADV_CHALLENGE = "CHALLENGE"
 
 class YepPaperPlugin : JavaPlugin(), Listener {
     private val textSerializer = PlainTextComponentSerializer.plainText()
 
-    private val colorCodeRegex = "&[0-9a-fk-orx]".toRegex(RegexOption.IGNORE_CASE)
+    companion object {
+        private val colorCodeRegex = "&[0-9a-fk-orx]".toRegex(RegexOption.IGNORE_CASE)
+    }
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, YEP_GENERIC)
-        Bukkit.getMessenger().registerOutgoingPluginChannel(this, YEP_ADVANCEMENT)
-        Bukkit.getMessenger().registerOutgoingPluginChannel(this, YEP_DEATH)
-        logger.info("Yup paper enabled")
+        logger.info("YepPaper enabled")
     }
 
     @EventHandler
     fun onPlayerDeath(event: PlayerDeathEvent) {
-        val message = String.format(
-            YEP_DEATH_FORMAT,
-            YEP_DEATH,
-            event.player.name,
-            removeColorCodes(textSerializer.serialize(event.player.displayName())),
-            event.deathMessage()?.let { removeColorCodes(textSerializer.serialize(it)) }
-        )
+        try {
+            val playerName = event.player.name
+            val displayName = removeColorCodes(textSerializer.serialize(event.player.displayName()))
+            val deathMessage = event.deathMessage()?.let { 
+                removeColorCodes(textSerializer.serialize(it)) 
+            } ?: ""
 
-        event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
+            val message = "$YEP_DEATH$RECORD_SEPARATOR$playerName$UNIT_SEPARATOR$displayName$UNIT_SEPARATOR$deathMessage"
+
+            event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
+        } catch (e: Exception) {
+            logger.warning("Failed to send death event for ${event.player.name}: ${e.message}")
+        }
     }
 
     @EventHandler
     fun onPlayerAdvancement(event: PlayerAdvancementDoneEvent) {
-        val advInfo = AdvancementInfo.from(event.advancement) ?: return
+        val display = event.advancement.getDisplay() ?: return
 
-        val advType: String = when (advInfo.frame) {
-            AdvancementInfo.Frame.CHALLENGE -> YEP_ADV_CHALLENGE
-            AdvancementInfo.Frame.GOAL -> YEP_ADV_GOAL
-            AdvancementInfo.Frame.TASK -> YEP_ADV_TASK
-            else -> YEP_ADV_DEFAULT
+        try {
+            val advType = when (display.frame()) {
+                AdvancementDisplay.Frame.CHALLENGE -> YEP_ADV_CHALLENGE
+                AdvancementDisplay.Frame.GOAL -> YEP_ADV_GOAL
+                AdvancementDisplay.Frame.TASK -> YEP_ADV_TASK
+            }
+
+            val playerName = event.player.name
+            val displayName = removeColorCodes(textSerializer.serialize(event.player.displayName()))
+            val title = removeColorCodes(textSerializer.serialize(display.title()))
+            val description = removeColorCodes(textSerializer.serialize(display.description()))
+
+            val message = "$YEP_ADVANCEMENT$RECORD_SEPARATOR$playerName$UNIT_SEPARATOR$displayName$UNIT_SEPARATOR$advType$UNIT_SEPARATOR$title$UNIT_SEPARATOR$description"
+
+            event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
+        } catch (e: Exception) {
+            logger.warning("Failed to send advancement event for ${event.player.name}: ${e.message}")
         }
-
-        val message: String = String.format(
-            YEP_ADV_FORMAT,
-            YEP_ADVANCEMENT,
-            event.player.name,
-            removeColorCodes(textSerializer.serialize(event.player.displayName())),
-            advType,
-            removeColorCodes(advInfo.title),
-            removeColorCodes(advInfo.description)
-        )
-
-        event.player.sendPluginMessage(this, YEP_GENERIC, message.toByteArray(Charsets.UTF_8))
     }
 
     private fun removeColorCodes(input: String): String {

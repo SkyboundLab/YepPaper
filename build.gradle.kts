@@ -1,15 +1,12 @@
-val kotlinVersion: String by project
-
 plugins {
-    kotlin("jvm") version "2.0.20"
-    id("com.gradleup.shadow") version "8.3.3"
+    kotlin("jvm") version "2.3.0"
+    id("com.gradleup.shadow") version "8.3.6"
     id("net.kyori.blossom") version "2.1.0"
 }
 
 group = "org.elliotnash.yeppaper"
 version = "1.0.0"
 
-// Replace variables in resource-templates dir
 sourceSets {
     main {
         blossom {
@@ -26,24 +23,21 @@ repositories {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
-    maven {
-        name = "jitpack"
-        url = uri("https://jitpack.io")
-    }
 }
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-
-    implementation("com.github.CroaBeast:AdvancementInfo:main-SNAPSHOT")
-
-    compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
