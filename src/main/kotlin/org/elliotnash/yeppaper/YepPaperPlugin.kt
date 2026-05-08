@@ -31,7 +31,7 @@ class YepPaperPlugin : JavaPlugin(), Listener {
     private val textSerializer = PlainTextComponentSerializer.plainText()
 
     companion object {
-        private val colorCodeRegex = "&[0-9a-fk-orx]".toRegex(RegexOption.IGNORE_CASE)
+        private val colorCodeRegex = "[§&][0-9a-fk-orx]".toRegex(RegexOption.IGNORE_CASE)
     }
 
     override fun onEnable() {
