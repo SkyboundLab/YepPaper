@@ -60,6 +60,7 @@ class YepPaperPlugin : JavaPlugin(), Listener {
     @EventHandler
     fun onPlayerAdvancement(event: PlayerAdvancementDoneEvent) {
         val display = event.advancement.getDisplay() ?: return
+        if (!display.doesAnnounceToChat()) return
 
         try {
             val advType = when (display.frame()) {
